@@ -2,7 +2,10 @@ package stack
 
 import (
 	"errors"
+	"fmt"
 	"runtime"
+
+	"github.com/onsi/gomega/format"
 )
 
 func (e *withStack) Error() string {
@@ -17,10 +20,20 @@ func (e *withStack) StackTrace() []runtime.Frame {
 	return e.stack.StackTrace()
 }
 
+func (e *withStack) GomegaString() string {
+	var s = fmt.Sprintf("%+v\nStack Trace:\n", e.Error())
+	for _, frame := range Trace(e) {
+		s += fmt.Sprintf("\t%s:%d %s()\n", frame.File, frame.Line, frame.Function)
+	}
+	return s
+}
+
 type withStack struct {
 	origin error
 	*stack
 }
+
+var _ format.GomegaStringer = &withStack{}
 
 // frame represents a program counter inside a stack frame.
 // For historical reasons if Frame is interpreted as a uintptr
